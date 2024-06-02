@@ -20,6 +20,8 @@ RUSSIAN_OPTION = "Русский🇷🇺"
 
 def log(log_message: str):
     print(log_message)
+    
+    
 def read_users_json(file_path='users.json'):
     if os.path.exists(file_path):
         with open(file_path, 'r') as file:
