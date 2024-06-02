@@ -4,8 +4,10 @@ from telegram import Update, ReplyKeyboardMarkup, ReplyKeyboardRemove, KeyboardB
 from telegram.ext import CallbackContext, ConversationHandler
 from variables import (
     uz_messages, ru_messages, ru_regions, uz_regions, ru_specializations, uz_specializations, 
-    uz_start_message, ru_start_message, uz_exp_messages, ru_exp_messages, language
+    uz_start_message, ru_start_message, uz_exp_messages, ru_exp_messages, language,
+    uz_end_message, ru_end_message
 )
+import json
 
 # Define language options
 UZBEK_OPTION = "Uzbek🇺🇿"
@@ -19,11 +21,35 @@ RUSSIAN_OPTION = "Русский🇷🇺"
 
 def log(log_message: str):
     print(log_message)
+def read_users_json(file_path='users.json'):
+    if os.path.exists(file_path):
+        with open(file_path, 'r') as file:
+            return json.load(file)
+    return {}
+
+def write_users_json(users, file_path='users.json'):
+    with open(file_path, 'w') as file:
+        json.dump(users, file, indent=4)
 
 def start(update: Update, context: CallbackContext) -> int:
+    user_id = update.message.from_user.id
+    username = update.message.from_user.username
+
+    # Read existing users from JSON
+    users = read_users_json()
+
+    # Check if user_id or username is already in users_json
+    if str(user_id) not in users:
+        users[str(user_id)] = {
+            'username': username,
+            'chat_id': update.message.chat_id
+        }
+        write_users_json(users)
+        log(f"Added new user: {user_id}, username: {username}")
+
     language_keyboard = [[UZBEK_OPTION, RUSSIAN_OPTION]]
     update.message.reply_text(
-        language, 
+        language,
         reply_markup=ReplyKeyboardMarkup(language_keyboard, resize_keyboard=True, one_time_keyboard=True)
     )
     return LANGUAGE
@@ -139,18 +165,17 @@ def get_specialization(update: Update, context: CallbackContext) -> int:
     user_data = context.user_data
     specialization_input = update.message.text
 
-    if specialization_input in uz_specializations or specialization_input in ru_specializations:
-        user_data['specialization'] = specialization_input
-        log(f"User {update.message.chat_id} provided specialization: {user_data['specialization']}")
+    #if specialization_input in uz_specializations or specialization_input in ru_specializations:
+    user_data['specialization'] = specialization_input
+    log(f"User {update.message.chat_id} provided specialization: {user_data['specialization']}")
 
-        next_message = uz_messages['EXPERIENCE'] if user_data['language'] == UZBEK_OPTION else ru_messages['EXPERIENCE']
-        update.message.reply_text(next_message)
-        return EXPERIENCE
-    else:
-        error_message = uz_exp_messages['SPECIALIZATION_EXCEPTION'] if user_data['language'] == UZBEK_OPTION else ru_exp_messages['SPECIALIZATION_EXCEPTION']
-        update.message.reply_text(error_message)
-        return SPECIALIZATION
-
+    next_message = uz_messages['EXPERIENCE'] if user_data['language'] == UZBEK_OPTION else ru_messages['EXPERIENCE']
+    update.message.reply_text(next_message)
+    return EXPERIENCE
+    # else:
+    #     error_message = uz_exp_messages['SPECIALIZATION_EXCEPTION'] if user_data['language'] == UZBEK_OPTION else ru_exp_messages['SPECIALIZATION_EXCEPTION']
+    #     update.message.reply_text(error_message)
+    #     return SPECIALIZATION
 def get_experience(update: Update, context: CallbackContext) -> int:
     user_data = context.user_data
     user_data['experience'] = update.message.text
@@ -185,17 +210,16 @@ def get_branch(update: Update, context: CallbackContext) -> int:
     user_data = context.user_data
     branch_input = update.message.text
 
-    if branch_input in uz_regions or branch_input in ru_regions:
-        user_data['branch'] = branch_input
-        log(f"User {update.message.chat_id} provided branch: {user_data['branch']}")
-
-        next_message = uz_messages['SALARY'] if user_data['language'] == UZBEK_OPTION else ru_messages['SALARY']
-        update.message.reply_text(next_message)
-        return SALARY
-    else:
-        error_message = uz_exp_messages['BRANCH_EXCEPTION'] if user_data['language'] == UZBEK_OPTION else ru_exp_messages['BRANCH_EXCEPTION']
-        update.message.reply_text(error_message)
-        return BRANCH
+    #if branch_input in uz_regions or branch_input in ru_regions:
+    user_data['branch'] = branch_input
+    log(f"User {update.message.chat_id} provided branch: {user_data['branch']}")
+    next_message = uz_messages['SALARY'] if user_data['language'] == UZBEK_OPTION else ru_messages['SALARY']
+    update.message.reply_text(next_message)
+    return SALARY
+    # else:
+    #     error_message = uz_exp_messages['BRANCH_EXCEPTION'] if user_data['language'] == UZBEK_OPTION else ru_exp_messages['BRANCH_EXCEPTION']
+    #     update.message.reply_text(error_message)
+    #     return BRANCH
 
 def get_salary(update: Update, context: CallbackContext) -> int:
     user_data = context.user_data
@@ -212,25 +236,26 @@ def get_photo(update: Update, context: CallbackContext) -> int:
     log(f"User {update.message.chat_id} provided photo: {user_data['photo']}")
 
     send_to_admin(context)
-    update.message.reply_text("Thank you for providing all the information. Your application has been submitted successfully!", reply_markup=ReplyKeyboardRemove())
+    next_message = uz_end_message if user_data['language'] == UZBEK_OPTION else ru_end_message
+    update.message.reply_text(next_message)
     user_data.clear()
     return ConversationHandler.END
 
 def send_to_admin(context: CallbackContext):
     user_data = context.user_data
     hr_message = (
-        f"Новый соискатель:\n\n"
-        f"Имя: {user_data.get('name', 'N/A')}\n"
-        f"Телефон: {user_data.get('phone', 'N/A')}\n"
-        f"Возраст: {user_data.get('age', 'N/A')}\n"
-        f"Семейное положение: {user_data.get('marital_status', 'N/A')}\n"
-        f"Образование: {user_data.get('education', 'N/A')}\n"
-        f"Специальность: {user_data.get('specialization', 'N/A')}\n"
-        f"Опыт работы: {user_data.get('experience', 'N/A')}\n"
-        f"Сильные стороны: {user_data.get('strengths', 'N/A')}\n"
-        f"Почему выбрал нас: {user_data.get('why_us', 'N/A')}\n"
-        f"Филиал: {user_data.get('branch', 'N/A')}\n"
-        f"Желаемая зарплата: {user_data.get('salary', 'N/A')}"
+        "Новый сосикатель:\n\n"
+        f"𝗜𝘀𝗺𝗶: {user_data.get('name', 'N/A')}\n"
+        f"𝗧𝗲𝗹𝗲𝗳𝗼𝗻: {user_data.get('phone', 'N/A')}\n"
+        f"𝗬𝗼𝘀𝗵𝗶: {user_data.get('age', 'N/A')}\n"
+        f"𝗢𝗶𝗹𝗮𝘃𝗶𝘆 𝗵𝗼𝗹𝗮𝘁𝗶: {user_data.get('marital_status', 'N/A')}\n"
+        f"𝗧𝗮'𝗹𝗶𝗺: {user_data.get('education', 'N/A')}\n"
+        f"𝗠𝘂𝘁𝗮𝘅𝗮𝘀𝘀𝗶𝘀𝗹𝗶𝗸: {user_data.get('specialization', 'N/A')}\n"
+        f"𝗜𝘀𝗵 𝘁𝗮𝗷𝗿𝗶𝗯𝗮𝘀𝗶: {user_data.get('experience', 'N/A')}\n"
+        f"𝗞𝘂𝗰𝗵𝗹𝗶 𝘁𝗼𝗺𝗼𝗻𝗹𝗮𝗿: {user_data.get('strengths', 'N/A')}\n"
+        f"𝗡𝗲𝗴𝗮 𝗯𝗶𝘇𝗻𝗶 𝘁𝗮𝗻𝗹𝗮𝗱𝗶: {user_data.get('why_us', 'N/A')}n"
+        f"𝗙𝗶𝗹𝗶𝗮𝗹: {user_data.get('branch', 'N/A')}\n"
+        f"𝗢𝘆𝗹𝗶𝗸: {user_data.get('salary', 'N/A')}"
     )
 
     if 'photo' in user_data:
