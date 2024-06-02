@@ -1,5 +1,4 @@
 import os
-import requests
 from telegram import Update, ReplyKeyboardMarkup, ReplyKeyboardRemove, KeyboardButton
 from telegram.ext import CallbackContext, ConversationHandler
 from variables import (
