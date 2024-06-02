@@ -16,6 +16,8 @@ def main():
     try:
         updater = Updater(BOT_TOKEN, use_context=True)
         dp = updater.dispatcher
+        
+        print('main')
 
         # Define the conversation handler with the states
         conv_handler = ConversationHandler(
@@ -30,7 +32,7 @@ def main():
                     MessageHandler(Filters.regex('^Cancel$'), cancel)
                 ],
                 PHONE: [
-                    MessageHandler(Filters.contact, get_phone),
+                    MessageHandler(Filters.contact | (Filters.text & Filters.regex(r'^\+?[1-9]\d{1,14}$')), get_phone),
                     MessageHandler(Filters.regex('^Cancel$'), cancel)
                 ],
                 AGE: [
