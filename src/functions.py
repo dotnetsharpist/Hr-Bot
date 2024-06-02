@@ -32,7 +32,9 @@ def write_users_json(users, file_path='users.json'):
 
 def start(update: Update, context: CallbackContext) -> int:
     user_id = update.message.from_user.id
-    username = update.message.from_user.username
+    username = "null"
+    if update.message.from_user.username:
+        username = update.message.from_user.username
 
     # Read existing users from JSON
     users = read_users_json()
