@@ -18,38 +18,38 @@ RUSSIAN_OPTION = "Русский🇷🇺"
     STRENGTHS, WHY_US, BRANCH, SALARY, PHOTO
 ) = range(13)
 
+l = ""
+
 def log(log_message: str):
     print(log_message)
     
     
-def read_users_json(file_path='users.json'):
-    if os.path.exists(file_path):
-        with open(file_path, 'r') as file:
-            return json.load(file)
-    return {}
+# def read_users_json(file_path='users.json'):
+#     if os.path.exists(file_path):
+#         with open(file_path, 'r') as file:
+#             return json.load(file)
+#     return {}
 
-def write_users_json(users, file_path='users.json'):
-    with open(file_path, 'w') as file:
-        json.dump(users, file, indent=4)
+# def write_users_json(users, file_path='users.json'):
+#     with open(file_path, 'w') as file:
+#         json.dump(users, file, indent=4)
 
 def start(update: Update, context: CallbackContext) -> int:
-    user_id = update.message.from_user.id
-    username = "null"
-    if update.message.from_user.username:
-        username = update.message.from_user.username
+    # user_id = update.message.from_user.id
+    # username = "null"
+    # if update.message.from_user.username:
+    #     username = update.message.from_user.username
 
-    # Read existing users from JSON
-    users = read_users_json()
+    # # Read existing users from JSON
+    # users = read_users_json()
 
-    # Check if user_id or username is already in users_json
-    if str(user_id) not in users:
-        users[str(user_id)] = {
-            'username': username,
-            'chat_id': update.message.chat_id
-        }
-        write_users_json(users)
-        log(f"Added new user: {user_id}, username: {username}")
-
+    # # Check if user_id or username is already in users_json
+    # if str(user_id) not in users:
+    #     users[str(user_id)] = {
+    #         'username': username,
+    #         'chat_id': update.message.chat_id
+    #     }
+    #     write_users_json(users)
     language_keyboard = [[UZBEK_OPTION, RUSSIAN_OPTION]]
     update.message.reply_text(
         language,
@@ -60,6 +60,7 @@ def start(update: Update, context: CallbackContext) -> int:
 def choose_language(update: Update, context: CallbackContext) -> int:
     user_data = context.user_data
     user_data['language'] = update.message.text
+    l = update.message.text
 
     log(f"User {update.message.chat_id} chose language: {user_data['language']}")
 
@@ -236,10 +237,10 @@ def get_salary(update: Update, context: CallbackContext) -> int:
 def get_photo(update: Update, context: CallbackContext) -> int:
     user_data = context.user_data
     user_data['photo'] = update.message.photo[-1].file_id
-    log(f"User {update.message.chat_id} provided photo: {user_data['photo']}")
+    log(f"User {update.message.chat_id} provided photo.")
 
     send_to_admin(context)
-    next_message = uz_end_message if user_data['language'] == UZBEK_OPTION else ru_end_message
+    next_message = uz_end_message if l == UZBEK_OPTION else ru_end_message
     update.message.reply_text(next_message)
     user_data.clear()
     return ConversationHandler.END
@@ -256,7 +257,7 @@ def send_to_admin(context: CallbackContext):
         f"𝗠𝘂𝘁𝗮𝘅𝗮𝘀𝘀𝗶𝘀𝗹𝗶𝗸: {user_data.get('specialization', 'N/A')}\n"
         f"𝗜𝘀𝗵 𝘁𝗮𝗷𝗿𝗶𝗯𝗮𝘀𝗶: {user_data.get('experience', 'N/A')}\n"
         f"𝗞𝘂𝗰𝗵𝗹𝗶 𝘁𝗼𝗺𝗼𝗻𝗹𝗮𝗿: {user_data.get('strengths', 'N/A')}\n"
-        f"𝗡𝗲𝗴𝗮 𝗯𝗶𝘇𝗻𝗶 𝘁𝗮𝗻𝗹𝗮𝗱𝗶: {user_data.get('why_us', 'N/A')}n"
+        f"𝗡𝗲𝗴𝗮 𝗯𝗶𝘇𝗻𝗶 𝘁𝗮𝗻𝗹𝗮𝗱𝗶: {user_data.get('why_us', 'N/A')}\n"
         f"𝗙𝗶𝗹𝗶𝗮𝗹: {user_data.get('branch', 'N/A')}\n"
         f"𝗢𝘆𝗹𝗶𝗸: {user_data.get('salary', 'N/A')}"
     )
