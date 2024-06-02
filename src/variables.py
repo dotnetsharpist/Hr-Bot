@@ -22,6 +22,8 @@ Sizni har bir xodim qadrlanadigan va qo'llab-quvvatlanadigan jamoamizning bir qi
 
 Hurmat bilan,
 “HAMROH mikromoliya tashkiloti” jamoasi
+
+||Agar siz arizangizni bekor qilmoqchi bo'lsangiz yoki to'ldirishda xatolik qilmoqchi bo'lsangiz, iltimos, /cancel tugmasini bosing.||
 """
 
 ru_start_message = """
@@ -33,6 +35,8 @@ ru_start_message = """
 
 С уважением,
 Команда "HAMROH микрофинансовой организации"
+
+||Если вы хотите отменить ваше заявление или исправить ошибки в заполнении, пожалуйста, нажмите /cancel.||
 """
 
 # Questions in Uzbek and Russian
