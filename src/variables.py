@@ -134,3 +134,17 @@ ru_exp_messages = {
     "SALARY_EXCEPTION": "Пожалуйста, укажите желаемую зарплату",
     "PHOTO_EXCEPTION": "Пожалуйста, отправьте ваше фото"
 }
+
+uz_success_message = """Tabriklaymiz. Sizning rezyumeingiz HAMROH mikromoliya tashkilotining tanlov jarayonlariga qabul qilindi.
+Tez orada sizga aloqaga chiqamiz."""
+
+uz_not_filled_message = "Ma'lumotingiz to'liq shaklda emas. Iltimos ma'lumotingizni to'liq kiritib qayta yuboring."
+
+uz_ignore_message = "Afsus. Sizning rezyumeingiz HAMROH mikromoliya tashkilotiga tanlov jarayoniga  qabul qilinmadi. Bizga ruzyume yuborganingizdan mamnunmiz."
+
+ru_success_message = """Поздравляем! Ваше резюме было принято для участия в конкурсных процессах микрофинансовой организации HAMROH.
+Мы скоро свяжемся с вами."""
+
+ru_not_filled_message = "Ваши данные не полностью заполнены. Пожалуйста, заполните данные полностью и отправьте заново."
+
+ru_ignore_message = "К сожалению, ваше резюме не прошло отбор в микрофинансовую организацию HAMROH. Мы благодарны вам за то, что вы прислали нам своё резюме."

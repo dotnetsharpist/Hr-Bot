@@ -1,7 +1,8 @@
 import os
 from telegram import Update, Bot, ReplyKeyboardMarkup, KeyboardButton
-from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, CallbackContext, ConversationHandler
-from functions import start, choose_language, get_name, get_phone, get_age, get_marital_status, get_education, get_specialization, get_position, get_experience, get_strengths, get_why_us, get_branch, get_salary, get_photo, cancel, UZBEK_OPTION, RUSSIAN_OPTION
+from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, CallbackContext, ConversationHandler, CallbackQueryHandler
+from functions import *
+from variables import uz_success_message, uz_ignore_message, uz_not_filled_message, ru_success_message, ru_ignore_message, ru_not_filled_message
 
 # Load environment variables
 from dotenv import load_dotenv
@@ -84,12 +85,47 @@ def main():
         )
 
         dp.add_handler(conv_handler)
+        
+        dp.add_handler(CallbackQueryHandler(button_callback))
 
         # Start the Bot
         updater.start_polling()
         updater.idle()
     except Exception as e:
         updater.bot.send_message(6177562485, text=e)
+
+
+def button_callback(update: Update, context: CallbackContext):
+    query = update.callback_query
+    query.answer()
+
+    # Extract the action, applicant ID, and message ID from the callback data
+    action, applicant_id, message_id = query.data.split(":")
+    
+    # Determine the language of the user (assuming it's stored in context data or user_data)
+    user_language = get_user_language()
+    
+    # Send the appropriate message based on the action
+    if action == "success":
+        message_to_send = uz_success_message if user_language == 'Uzbek🇺🇿' else ru_success_message
+        context.bot.send_message(chat_id=applicant_id, text=message_to_send)
+        status_message = "Qabul qilingani haqida xabar berildi✅"
+    elif action == "not_filled":
+        message_to_send = uz_not_filled_message if user_language == 'Uzbek🇺🇿' else ru_not_filled_message
+        context.bot.send_message(chat_id=applicant_id, text=message_to_send)
+        status_message = "Ariza toliq toldirilmaganligi xaqida xabar berildi✍🏿"
+    elif action == "ignore":
+        message_to_send = uz_ignore_message if user_language == 'Uzbek🇺🇿' else ru_ignore_message
+        context.bot.send_message(chat_id=applicant_id, text=message_to_send)
+        status_message = "Tog'ri kelmagani xaqida xabar berildi🤧"
+
+    # Edit the original message to append the status message
+    try:
+        query.edit_message_caption(
+            caption=query.message.caption + f"\n\nStatus: {status_message}"
+        )
+    except Exception as e:
+        print(f"Failed to edit message caption: {e}")
 
 if __name__ == '__main__':
     main()

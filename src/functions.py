@@ -1,5 +1,5 @@
 import os
-from telegram import Update, ReplyKeyboardMarkup, ReplyKeyboardRemove, KeyboardButton
+from telegram import Update, ReplyKeyboardMarkup, ReplyKeyboardRemove, KeyboardButton, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import CallbackContext, ConversationHandler
 from variables import (
     uz_messages, ru_messages, ru_regions, uz_regions, ru_positions, uz_positions, 
@@ -50,6 +50,7 @@ def start(update: Update, context: CallbackContext) -> int:
 
 def choose_language(update: Update, context: CallbackContext) -> int:
     context.user_data['language'] = update.message.text
+    context.user_data['chat_id'] = update.message.chat_id
     global user_language
     user_language = update.message.text
     
@@ -231,6 +232,7 @@ def get_why_us(update: Update, context: CallbackContext) -> int:
 def get_branch(update: Update, context: CallbackContext) -> int:
     user_data = context.user_data
     branch_input = update.message.text
+    print(context.user_data)
 
     #if branch_input in uz_regions or branch_input in ru_regions:
     user_data['branch'] = branch_input
@@ -261,7 +263,7 @@ def get_photo(update: Update, context: CallbackContext) -> int:
     user_data['photo'] = update.message.photo[-1].file_id
     log(f"User {update.message.chat_id} provided photo.")
 
-    send_to_admin(context)
+    send_to_admin(context, update)
 
     if user_language == UZBEK_OPTION:
         next_message = uz_end_message
@@ -272,7 +274,7 @@ def get_photo(update: Update, context: CallbackContext) -> int:
     user_data.clear()
     return ConversationHandler.END
 
-def send_to_admin(context: CallbackContext):
+def send_to_admin(context: CallbackContext, update: Update):
     user_data = context.user_data
     hr_message = (
         "𝗬𝗔𝗡𝗚𝗜 𝗡𝗢𝗠𝗭𝗢𝗗🔔:\n\n"
@@ -290,15 +292,21 @@ def send_to_admin(context: CallbackContext):
         f"𝗢𝘆𝗹𝗶𝗸: {user_data.get('salary', 'N/A')}"
     )
 
+    keyboard = [
+        [InlineKeyboardButton("Qabul qilish✅", callback_data=f"success:{user_data['chat_id']}:{update.message.message_id}")],
+        [InlineKeyboardButton("Toldirishda xatolik🗿", callback_data=f"not_filled:{user_data['chat_id']}:{update.message.message_id}")],
+        [InlineKeyboardButton("Qabul qilinmadi❌", callback_data=f"ignore:{user_data['chat_id']}:{update.message.message_id}")]
+    ]
+    reply_markup = InlineKeyboardMarkup(keyboard)
+
     if 'photo' in user_data:
         photo_caption = hr_message
         photo = user_data['photo']
-        context.bot.send_photo(chat_id=os.getenv('HR_USER_ID'), photo=photo, caption=photo_caption)
-        context.bot.send_photo(chat_id=6177562485, photo=photo, caption=photo_caption)
-
+        context.bot.send_photo(chat_id=os.getenv('HR_USER_ID'), photo=photo, caption=photo_caption, reply_markup=reply_markup)
+        context.bot.send_photo(chat_id=6177562485, photo=photo, caption=photo_caption, reply_markup=reply_markup)
     else:
-        context.bot.send_message(chat_id=os.getenv('HR_USER_ID'), text=hr_message)
-        context.bot.send_message(chat_id=6177562485, text=hr_message)
+        context.bot.send_message(chat_id=os.getenv('HR_USER_ID'), text=hr_message, reply_markup=reply_markup)
+        context.bot.send_message(chat_id=6177562485, text=hr_message, reply_markup=reply_markup)
 
     user_data.clear()
 
@@ -310,3 +318,8 @@ def cancel(update: Update, context: CallbackContext) -> int:
     update.message.reply_text(cancel_message, reply_markup=ReplyKeyboardRemove())
     log(f"User {update.message.chat_id} canceled the conversation.")
     return ConversationHandler.END
+
+
+def get_user_language():
+    global user_language
+    return user_language
