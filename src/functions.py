@@ -2,9 +2,9 @@ import os
 from telegram import Update, ReplyKeyboardMarkup, ReplyKeyboardRemove, KeyboardButton
 from telegram.ext import CallbackContext, ConversationHandler
 from variables import (
-    uz_messages, ru_messages, ru_regions, uz_regions, ru_specializations, uz_specializations, 
+    uz_messages, ru_messages, ru_regions, uz_regions, ru_positions, uz_positions, 
     uz_start_message, ru_start_message, uz_exp_messages, ru_exp_messages, language,
-    uz_end_message, ru_end_message
+    uz_end_message, ru_end_message, start_message_photo
 )
 from tinydb import TinyDB, Query
 
@@ -14,9 +14,9 @@ RUSSIAN_OPTION = "Русский🇷🇺"
 
 # Define conversation states
 (
-    LANGUAGE, NAME, PHONE, AGE, MARITAL_STATUS, EDUCATION, SPECIALIZATION, EXPERIENCE, 
+    LANGUAGE, NAME, PHONE, AGE, MARITAL_STATUS, EDUCATION, SPECIALIZATION, POSITION, EXPERIENCE, 
     STRENGTHS, WHY_US, BRANCH, SALARY, PHOTO
-) = range(13)
+) = range(14)
 
 user_language = None
 
@@ -48,7 +48,6 @@ def start(update: Update, context: CallbackContext) -> int:
     )
     return LANGUAGE
 
-
 def choose_language(update: Update, context: CallbackContext) -> int:
     context.user_data['language'] = update.message.text
     global user_language
@@ -56,14 +55,33 @@ def choose_language(update: Update, context: CallbackContext) -> int:
     
     log(f"User {update.message.chat_id} chose language: {context.user_data['language']}")
 
+    # Get the directory of the current script
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    # Construct the full path to the image
+    image_path = os.path.join(script_dir, 'media', 'image.png')
+    
+    # Choose the appropriate start message and caption
     if context.user_data['language'] == UZBEK_OPTION:
-        update.message.reply_text(uz_start_message, reply_markup=ReplyKeyboardRemove())
-        update.message.reply_text(uz_messages['NAME'])
+        start_message = uz_start_message
+        name_message = uz_messages['NAME']
     else:
-        update.message.reply_text(ru_start_message, reply_markup=ReplyKeyboardRemove())
-        update.message.reply_text(ru_messages['NAME'])
+        start_message = ru_start_message
+        name_message = ru_messages['NAME']
+    
+    # Send the image with the start message as the caption
+    with open(image_path, 'rb') as image_file:
+        context.bot.send_photo(
+            chat_id=update.message.chat_id,
+            photo=image_file,
+            caption=start_message,
+            reply_markup=ReplyKeyboardRemove()
+        )
+    
+    # Send the name request message
+    update.message.reply_text(name_message)
 
     return NAME
+
 
 def get_name(update: Update, context: CallbackContext) -> int:
     user_data = context.user_data
@@ -150,32 +168,36 @@ def get_education(update: Update, context: CallbackContext) -> int:
     user_data['education'] = update.message.text
     log(f"User {update.message.chat_id} provided education: {user_data['education']}")
 
-    specializations = uz_specializations if user_data['language'] == UZBEK_OPTION else ru_specializations
     prompt_message = uz_messages['SPECIALIZATION'] if user_data['language'] == UZBEK_OPTION else ru_messages['SPECIALIZATION']
-    reply_markup = ReplyKeyboardMarkup(specializations, one_time_keyboard=True)
 
-    update.message.reply_text(prompt_message, reply_markup=reply_markup)
+    update.message.reply_text(prompt_message)
     return SPECIALIZATION
 
 def get_specialization(update: Update, context: CallbackContext) -> int:
     user_data = context.user_data
     specialization_input = update.message.text
 
-    #if specialization_input in uz_specializations or specialization_input in ru_specializations:
+    user_data['specialization'] = specialization_input
+    log(f"User {update.message.chat_id} provided specialization: {user_data['specialization']}")
+    specializations = uz_positions if user_data['language'] == UZBEK_OPTION else ru_positions
+    prompt_message = uz_messages['POSITION'] if user_data['language'] == UZBEK_OPTION else ru_messages['POSITION']
+    reply_markup = ReplyKeyboardMarkup(specializations, one_time_keyboard=True)
+
+    update.message.reply_text(prompt_message, reply_markup=reply_markup)
+    return POSITION
+    
+def get_position(update: Update, context: CallbackContext) -> int:
+    user_data = context.user_data
+    user_data['position'] = update.message.text
+    log(f"User {update.message.chat_id} provided position: {user_data['position']}")
     
     cancel_button = KeyboardButton(text="/cancel❌")
     cancel_keyboard = ReplyKeyboardMarkup([[cancel_button]], one_time_keyboard=True)
-
-    user_data['specialization'] = specialization_input
-    log(f"User {update.message.chat_id} provided specialization: {user_data['specialization']}")
-
     next_message = uz_messages['EXPERIENCE'] if user_data['language'] == UZBEK_OPTION else ru_messages['EXPERIENCE']
     update.message.reply_text(next_message, reply_markup=cancel_keyboard)
     return EXPERIENCE
-    # else:
-    #     error_message = uz_exp_messages['SPECIALIZATION_EXCEPTION'] if user_data['language'] == UZBEK_OPTION else ru_exp_messages['SPECIALIZATION_EXCEPTION']
-    #     update.message.reply_text(error_message)
-    #     return SPECIALIZATION
+
+    
 def get_experience(update: Update, context: CallbackContext) -> int:
     user_data = context.user_data
     user_data['experience'] = update.message.text
@@ -260,6 +282,7 @@ def send_to_admin(context: CallbackContext):
         f"𝗢𝗶𝗹𝗮𝘃𝗶𝘆 𝗵𝗼𝗹𝗮𝘁𝗶: {user_data.get('marital_status', 'N/A')}\n"
         f"𝗧𝗮'𝗹𝗶𝗺: {user_data.get('education', 'N/A')}\n"
         f"𝗠𝘂𝘁𝗮𝘅𝗮𝘀𝘀𝗶𝘀𝗹𝗶𝗸: {user_data.get('specialization', 'N/A')}\n"
+        f"𝗜𝘀𝗵 𝗹𝗮𝘃𝗼𝘇𝗶𝗺𝗶: {user_data.get('position', 'N/A')}\n"
         f"𝗜𝘀𝗵 𝘁𝗮𝗷𝗿𝗶𝗯𝗮𝘀𝗶: {user_data.get('experience', 'N/A')}\n"
         f"𝗞𝘂𝗰𝗵𝗹𝗶 𝘁𝗼𝗺𝗼𝗻𝗹𝗮𝗿: {user_data.get('strengths', 'N/A')}\n"
         f"𝗡𝗲𝗴𝗮 𝗯𝗶𝘇𝗻𝗶 𝘁𝗮𝗻𝗹𝗮𝗱𝗶: {user_data.get('why_us', 'N/A')}\n"

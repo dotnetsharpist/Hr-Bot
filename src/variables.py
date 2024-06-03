@@ -6,12 +6,15 @@ load_dotenv()
 BOT_TOKEN = os.getenv('BOT_TOKEN')
 HR_USER_ID = os.getenv('HR_USER_ID')
 LOG_CHANNEL_ID = os.getenv('LOG_CHANNEL_ID')
+MEDIA_PATH = "src/media"
 
 # Language options
 UZBEK_OPTION = "Uzbek"
 RUSSIAN_OPTION = "Русский"
 
 language = "Tilni tanlang/Выберите язык"
+
+start_message_photo = 'src/media/image.png'
 
 uz_start_message = """
 Assalomu Alaykum!
@@ -36,7 +39,7 @@ ru_start_message = """
 С уважением,
 Команда "HAMROH микрофинансовой организации"
 
-||Если вы хотите отменить ваше заявление или исправить ошибки в заполнении, пожалуйста, нажмите /cancel.||
+Если вы хотите отменить ваше заявление или исправить ошибки в заполнении, пожалуйста, нажмите /cancel.
 """
 
 # Questions in Uzbek and Russian
@@ -47,6 +50,7 @@ uz_messages = {
     "MARITAL_STATUS": "Oilaviy holatingiz?",
     "EDUCATION": "Ma'lumotingiz? (Qaysi ta'lim muassasasini tamomlagansiz?)",
     "SPECIALIZATION": "Mutaxassisligingiz?",
+    'POSITION': "Qaysi lavozimda ishlamoqchisiz?",  # New message for position
     "EXPERIENCE": "Ish tajribangiz? (avval ishlagan joylariz)",
     "STRENGTHS": "Kuchli tomonlaringiz?",
     "WHY_US": "Nega aynan bizni korxonada ishlamoqchisiz?",
@@ -62,6 +66,7 @@ ru_messages = {
     "MARITAL_STATUS": "Ваше семейное положение?",
     "EDUCATION": "Ваше образование? (Какое учебное заведение вы закончили?)",
     "SPECIALIZATION": "Ваша специальность?",
+    'POSITION': "На какой должности вы хотите работать?",  # New message for position
     "EXPERIENCE": "Ваш опыт работы? (предыдущие места работы)",
     "STRENGTHS": "Ваши сильные стороны?",
     "WHY_US": "Почему вы хотите работать в нашей компании?",
@@ -84,13 +89,13 @@ ru_regions = [
     ["Термез", "Ургенч", "Каракалпакстан"]
 ]
 
-uz_specializations = [
+uz_positions = [
     ["Операцион бош менежери", "Кассир", "IT"],
     ["Ички аудит", "Бош бухгалтер", "Юрист"],
     ["HR менежер", "Кредит маҳсулотларини сотиш бўлими"]
 ]
 
-ru_specializations = [
+ru_positions = [
     ["Операционный менеджер", "Кассир", "IT"],
     ["Внутренний аудит", "Главный бухгалтер", "Юрист"],
     ["HR менеджер", "Отдел продаж кредитных продуктов"]

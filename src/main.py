@@ -1,7 +1,7 @@
 import os
 from telegram import Update, Bot, ReplyKeyboardMarkup, KeyboardButton
 from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, CallbackContext, ConversationHandler
-from functions import start, choose_language, get_name, get_phone, get_age, get_marital_status, get_education, get_specialization, get_experience, get_strengths, get_why_us, get_branch, get_salary, get_photo, cancel, UZBEK_OPTION, RUSSIAN_OPTION
+from functions import start, choose_language, get_name, get_phone, get_age, get_marital_status, get_education, get_specialization, get_position, get_experience, get_strengths, get_why_us, get_branch, get_salary, get_photo, cancel, UZBEK_OPTION, RUSSIAN_OPTION
 
 # Load environment variables
 from dotenv import load_dotenv
@@ -10,7 +10,7 @@ load_dotenv()
 BOT_TOKEN = os.getenv('BOT_TOKEN')
 
 # Define conversation states
-LANGUAGE, NAME, PHONE, AGE, MARITAL_STATUS, EDUCATION, SPECIALIZATION, EXPERIENCE, STRENGTHS, WHY_US, BRANCH, SALARY, PHOTO = range(13)
+LANGUAGE, NAME, PHONE, AGE, MARITAL_STATUS, EDUCATION, SPECIALIZATION, POSITION, EXPERIENCE, STRENGTHS, WHY_US, BRANCH, SALARY, PHOTO = range(14)
 
 def main():
     try:
@@ -49,6 +49,10 @@ def main():
                 ],
                 SPECIALIZATION: [
                     MessageHandler(Filters.text & ~Filters.command, get_specialization),
+                    MessageHandler(Filters.regex('^Cancel$'), cancel)
+                ],
+                POSITION: [
+                    MessageHandler(Filters.text & ~Filters.command, get_position),
                     MessageHandler(Filters.regex('^Cancel$'), cancel)
                 ],
                 EXPERIENCE: [
