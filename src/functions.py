@@ -18,7 +18,7 @@ RUSSIAN_OPTION = "Русский🇷🇺"
     STRENGTHS, WHY_US, BRANCH, SALARY, PHOTO
 ) = range(13)
 
-l = ""
+user_language = None
 
 def log(log_message: str):
     print(log_message)
@@ -50,13 +50,13 @@ def start(update: Update, context: CallbackContext) -> int:
 
 
 def choose_language(update: Update, context: CallbackContext) -> int:
-    user_data = context.user_data
-    user_data['language'] = update.message.text
-    l = update.message.text
+    context.user_data['language'] = update.message.text
+    global user_language
+    user_language = update.message.text
+    
+    log(f"User {update.message.chat_id} chose language: {context.user_data['language']}")
 
-    log(f"User {update.message.chat_id} chose language: {user_data['language']}")
-
-    if user_data['language'] == UZBEK_OPTION:
+    if context.user_data['language'] == UZBEK_OPTION:
         update.message.reply_text(uz_start_message, reply_markup=ReplyKeyboardRemove())
         update.message.reply_text(uz_messages['NAME'])
     else:
@@ -234,12 +234,18 @@ def get_salary(update: Update, context: CallbackContext) -> int:
     return PHOTO
 
 def get_photo(update: Update, context: CallbackContext) -> int:
+    global user_language
     user_data = context.user_data
     user_data['photo'] = update.message.photo[-1].file_id
     log(f"User {update.message.chat_id} provided photo.")
 
     send_to_admin(context)
-    next_message = uz_end_message if l == UZBEK_OPTION else ru_end_message
+
+    if user_language == UZBEK_OPTION:
+        next_message = uz_end_message
+    else:
+        next_message = ru_end_message
+
     update.message.reply_text(next_message)
     user_data.clear()
     return ConversationHandler.END
