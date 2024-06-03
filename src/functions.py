@@ -6,7 +6,7 @@ from variables import (
     uz_start_message, ru_start_message, uz_exp_messages, ru_exp_messages, language,
     uz_end_message, ru_end_message
 )
-import json
+from tinydb import TinyDB, Query
 
 # Define language options
 UZBEK_OPTION = "Uzbek🇺🇿"
@@ -23,39 +23,31 @@ l = ""
 def log(log_message: str):
     print(log_message)
     
-    
-# def read_users_json(file_path='users.json'):
-#     if os.path.exists(file_path):
-#         with open(file_path, 'r') as file:
-#             return json.load(file)
-#     return {}
 
-# def write_users_json(users, file_path='users.json'):
-#     with open(file_path, 'w') as file:
-#         json.dump(users, file, indent=4)
+# Initialize TinyDB
+db = TinyDB('users.json')
+
+# Function to check and store user in TinyDB
+def check_and_store_user(update: Update):
+    user_id = update.message.from_user.id
+    username = update.message.from_user.username if update.message.from_user.username else "null"
+    
+    User = Query()
+    existing_user = db.search(User.user_id == user_id)
+    
+    if not existing_user:
+        db.insert({'user_id': user_id, 'username': username, 'chat_id': update.message.chat_id})
 
 def start(update: Update, context: CallbackContext) -> int:
-    # user_id = update.message.from_user.id
-    # username = "null"
-    # if update.message.from_user.username:
-    #     username = update.message.from_user.username
+    check_and_store_user(update)
 
-    # # Read existing users from JSON
-    # users = read_users_json()
-
-    # # Check if user_id or username is already in users_json
-    # if str(user_id) not in users:
-    #     users[str(user_id)] = {
-    #         'username': username,
-    #         'chat_id': update.message.chat_id
-    #     }
-    #     write_users_json(users)
     language_keyboard = [[UZBEK_OPTION, RUSSIAN_OPTION]]
     update.message.reply_text(
         language,
         reply_markup=ReplyKeyboardMarkup(language_keyboard, resize_keyboard=True, one_time_keyboard=True)
     )
     return LANGUAGE
+
 
 def choose_language(update: Update, context: CallbackContext) -> int:
     user_data = context.user_data
@@ -170,11 +162,15 @@ def get_specialization(update: Update, context: CallbackContext) -> int:
     specialization_input = update.message.text
 
     #if specialization_input in uz_specializations or specialization_input in ru_specializations:
+    
+    cancel_button = KeyboardButton(text="/cancel❌")
+    cancel_keyboard = ReplyKeyboardMarkup([[cancel_button]], one_time_keyboard=True)
+
     user_data['specialization'] = specialization_input
     log(f"User {update.message.chat_id} provided specialization: {user_data['specialization']}")
 
     next_message = uz_messages['EXPERIENCE'] if user_data['language'] == UZBEK_OPTION else ru_messages['EXPERIENCE']
-    update.message.reply_text(next_message)
+    update.message.reply_text(next_message, reply_markup=cancel_keyboard)
     return EXPERIENCE
     # else:
     #     error_message = uz_exp_messages['SPECIALIZATION_EXCEPTION'] if user_data['language'] == UZBEK_OPTION else ru_exp_messages['SPECIALIZATION_EXCEPTION']
@@ -216,9 +212,12 @@ def get_branch(update: Update, context: CallbackContext) -> int:
 
     #if branch_input in uz_regions or branch_input in ru_regions:
     user_data['branch'] = branch_input
+    cancel_button = KeyboardButton(text="/cancel❌")
+    cancel_keyboard = ReplyKeyboardMarkup([[cancel_button]], one_time_keyboard=True)
+
     log(f"User {update.message.chat_id} provided branch: {user_data['branch']}")
     next_message = uz_messages['SALARY'] if user_data['language'] == UZBEK_OPTION else ru_messages['SALARY']
-    update.message.reply_text(next_message)
+    update.message.reply_text(next_message, reply_markup=cancel_keyboard)
     return SALARY
     # else:
     #     error_message = uz_exp_messages['BRANCH_EXCEPTION'] if user_data['language'] == UZBEK_OPTION else ru_exp_messages['BRANCH_EXCEPTION']
@@ -248,7 +247,7 @@ def get_photo(update: Update, context: CallbackContext) -> int:
 def send_to_admin(context: CallbackContext):
     user_data = context.user_data
     hr_message = (
-        "Новый сосикатель:\n\n"
+        "𝗬𝗔𝗡𝗚𝗜 𝗡𝗢𝗠𝗭𝗢𝗗🔔:\n\n"
         f"𝗜𝘀𝗺𝗶: {user_data.get('name', 'N/A')}\n"
         f"𝗧𝗲𝗹𝗲𝗳𝗼𝗻: {user_data.get('phone', 'N/A')}\n"
         f"𝗬𝗼𝘀𝗵𝗶: {user_data.get('age', 'N/A')}\n"
