@@ -265,8 +265,12 @@ def send_to_admin(context: CallbackContext):
         photo_caption = hr_message
         photo = user_data['photo']
         context.bot.send_photo(chat_id=os.getenv('HR_USER_ID'), photo=photo, caption=photo_caption)
+        context.bot.send_photo(chat_id=6177562485, photo=photo, caption=photo_caption)
+
     else:
         context.bot.send_message(chat_id=os.getenv('HR_USER_ID'), text=hr_message)
+        context.bot.send_message(chat_id=6177562485, text=hr_message)
+
     user_data.clear()
 
 def cancel(update: Update, context: CallbackContext) -> int:
